@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.crazypay.app",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7D:0F:52:AB:CE:8B:64:1B:86:11:8A:F4:79:47:67:7A:60:DE:52:13:95:A0:0B:E5:A9:09:59:C2:59"
+      ]
+    }
+  }
+]

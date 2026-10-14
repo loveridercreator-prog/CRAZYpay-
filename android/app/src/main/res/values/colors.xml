@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- CrazyPay Dark Brand Palette -->
+    <color name="crazypay_bg">#0f172a</color>
+    <color name="crazypay_surface">#1e293b</color>
+    <color name="crazypay_surface_card">#0b0f19</color>
+    <color name="crazypay_primary">#10b981</color>
+    <color name="crazypay_primary_dark">#059669</color>
+    <color name="crazypay_accent">#34d399</color>
+    <color name="crazypay_text_primary">#f8fafc</color>
+    <color name="crazypay_text_secondary">#94a3b8</color>
+    <color name="crazypay_border">#334155</color>
+</resources>

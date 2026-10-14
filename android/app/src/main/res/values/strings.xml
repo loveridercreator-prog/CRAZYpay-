@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CrazyPay</string>
+    <string name="app_description">P2P Escrow &amp; Payment Ledger Protection</string>
+    <string name="loading_text">Connecting to CrazyPay secure ledger…</string>
+    <string name="error_network_title">Connection Unavailable</string>
+    <string name="error_network_message">Unable to reach the payment ledger. Please check your internet connection and tap retry.</string>
+    <string name="retry">Retry</string>
+    <string name="notification_channel_name">CrazyPay Transactions</string>
+    <string name="notification_channel_desc">Real-time alerts for incoming payments and UTR ledger updates</string>
+</resources>

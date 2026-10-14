@@ -1,0 +1,6 @@
+{
+  "name": "CrazyPay",
+  "description": "Secure P2P Trading Platform with Instant Settlement, UTR Verification, and USDT Gateway",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

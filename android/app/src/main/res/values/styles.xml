@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Application Theme -->
+    <style name="Theme.CrazyPay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/crazypay_primary</item>
+        <item name="colorPrimaryVariant">@color/crazypay_primary_dark</item>
+        <item name="colorOnPrimary">@color/crazypay_bg</item>
+        <item name="android:statusBarColor">@color/crazypay_bg</item>
+        <item name="android:navigationBarColor">@color/crazypay_bg</item>
+        <item name="android:windowBackground">@color/crazypay_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

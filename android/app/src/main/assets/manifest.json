@@ -1,0 +1,158 @@
+{
+  "id": "/",
+  "name": "CrazyPay Custom P2P Engine",
+  "short_name": "CrazyPay",
+  "description": "Production P2P Trading Platform with Instant Settlement, Green Infinity Engine, and Automated UTR Reconciliation",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["tabbed", "window-controls-overlay", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "dir": "ltr",
+  "lang": "en-US",
+  "categories": ["finance", "business", "utilities"],
+  "iarc_rating_id": "9733918a-641e-450e-b839-a796a5518b5b",
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.crazypay.app",
+      "id": "com.crazypay.app"
+    },
+    {
+      "platform": "windows",
+      "url": "https://apps.microsoft.com/store/detail/com.crazypay.app",
+      "id": "com.crazypay.app"
+    }
+  ],
+  "scope_extensions": [
+    {
+      "type": "origin",
+      "origin": "https://crazypay.app"
+    },
+    {
+      "type": "origin",
+      "origin": "https://api.crazypay.app"
+    },
+    {
+      "type": "origin",
+      "origin": "https://engine.crazypay.app"
+    }
+  ],
+  "tab_strip": {
+    "home_tab": {
+      "scope_patterns": ["/"]
+    },
+    "new_tab_button": {
+      "url": "/?tab=orders"
+    }
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "note_taking": {
+    "new_note_url": "/?action=new-ledger-note"
+  },
+  "file_handlers": [
+    {
+      "action": "/?action=open-statement",
+      "name": "CrazyPay Statement & UTR Logs",
+      "launch_type": "single-client",
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ],
+      "accept": {
+        "text/csv": [".csv"],
+        "application/json": [".json"],
+        "text/plain": [".txt"]
+      }
+    }
+  ],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CrazyPay Custom P2P Mobile Dashboard and Real-Time Settlement Desk"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "CrazyPay Custom P2P High Liquidity Order Book and UTR Verification Console"
+    }
+  ],
+  "widgets": [
+    {
+      "name": "CrazyPay P2P Rates Widget",
+      "short_name": "P2P Rates",
+      "description": "Live INR/USDT exchange rates and pending UTR queue status",
+      "tag": "crazypay-rates",
+      "template": "crazypay-widget-template",
+      "ms_ac_template": "/widget.json",
+      "data": "/api/widget-data",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "/screenshot-mobile.png",
+          "sizes": "750x1334",
+          "label": "Live Rates and UTR Match Summary"
+        }
+      ],
+      "icons": [
+        {
+          "src": "/pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ]
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+mypwa",
+      "url": "/?action=%s"
+    },
+    {
+      "protocol": "web+crazypay",
+      "url": "/?pay=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/?action=share-utr",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
