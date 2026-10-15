@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CrazyPay</string>
+    <string name="tagline">Secure P2P Trading with Instant UTR Verification</string>
+
+    <!-- Nav tabs -->
+    <string name="nav_home">Home</string>
+    <string name="nav_trade">Trade</string>
+    <string name="nav_upi">UPI</string>
+    <string name="nav_team">Team</string>
+    <string name="nav_mine">Mine</string>
+
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="mobile_number">Mobile Number (+91)</string>
+    <string name="password">Password</string>
+    <string name="enter_captcha">Enter Captcha</string>
+    <string name="enter_otp">Enter 6-Digit OTP</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="login_btn">Log In to Account</string>
+    <string name="register_btn">Create Account</string>
+
+    <!-- Home -->
+    <string name="inr_balance">INR Balance</string>
+    <string name="usdt_balance">USDT Balance</string>
+    <string name="quick_buy">Buy USDT</string>
+    <string name="quick_sell">Sell USDT</string>
+    <string name="deposit">Deposit</string>
+    <string name="withdraw">Withdraw</string>
+    <string name="market_rate">Live Market Rate</string>
+    <string name="recent_orders">Recent P2P Orders</string>
+    <string name="shield_verified">DLT &amp; Bank Verified Engine</string>
+
+    <!-- Trade -->
+    <string name="buy_tab">Buy USDT</string>
+    <string name="sell_tab">Sell USDT</string>
+    <string name="fiat_amount_hint">Enter Amount (₹)</string>
+    <string name="usdt_amount_hint">USDT You Receive</string>
+    <string name="create_order">Place P2P Order</string>
+    <string name="live_exchange_rate">1 USDT = ₹91.50</string>
+
+    <!-- UPI -->
+    <string name="upi_title">UPI &amp; Bank Bindings</string>
+    <string name="active_binding_badge">Active Binding</string>
+    <string name="single_binding_rule">Single Active Binding Rule: Only one payment identifier is active at any time for instant settlements.</string>
+    <string name="add_upi_btn">+ Bind New UPI / Account</string>
+
+    <!-- Team -->
+    <string name="team_title">Referral Commission Hub</string>
+    <string name="invite_code_label">Your Referral Code</string>
+    <string name="copy_invite">Copy Code</string>
+
+    <!-- Mine -->
+    <string name="user_profile">Profile &amp; Settings</string>
+    <string name="kyc_level">KYC Tier 2 Verified</string>
+    <string name="security_pin">Security PIN &amp; Biometrics</string>
+    <string name="logout">Log Out</string>
+</resources>

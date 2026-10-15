@@ -4,25 +4,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
 import androidx.work.Data
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.Constraints
-import androidx.work.NetworkType
-import androidx.work.BackoffPolicy
+import com.crazypay.app.data.repository.CrazyPayRepository
 import com.crazypay.app.data.worker.UtrSyncWorker
 import com.crazypay.app.domain.parser.BankSmsParserEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 /**
  * BroadcastReceiver for intercepting incoming transactional bank SMS notifications.
- *
- * Security & Reliability Safeguards:
- * 1. Must be declared in AndroidManifest.xml with `android:permission="android.permission.BROADCAST_SMS"`
- *    to prevent spoofed broadcasts from malicious third-party apps or ADB.
- * 2. Does NOT execute network operations on the main thread.
- * 3. Immediately enqueues work via Android Jetpack WorkManager with network constraints.
- * 4. Strictly suppresses logging of raw SMS bodies to protect user privacy (Zero PII logging).
+ * Automatically extracts 12-digit UTR, matches against pending P2P trades, and triggers background sync.
  */
 class TransactionSmsReceiver : BroadcastReceiver() {
 
@@ -38,7 +36,6 @@ class TransactionSmsReceiver : BroadcastReceiver() {
             return
         }
 
-        // Aggregate multipart SMS if necessary
         val sender = messages[0].displayOriginatingAddress ?: return
         val fullBody = StringBuilder()
         var receivedTimestamp = messages[0].timestampMillis
@@ -51,7 +48,6 @@ class TransactionSmsReceiver : BroadcastReceiver() {
             receivedTimestamp = System.currentTimeMillis()
         }
 
-        // Attempt domain-level parse
         val parseResult = parserEngine.parse(
             rawSender = sender,
             rawBody = fullBody.toString(),
@@ -59,8 +55,30 @@ class TransactionSmsReceiver : BroadcastReceiver() {
         )
 
         parseResult.onSuccess { notification ->
-            // Schedule guaranteed background upload via WorkManager
-            enqueueUtrSyncWork(context, notification.utr, notification.amount, notification.senderHeader, notification.timestamp)
+            // 1. Instant local Room DB reconciliation
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val repository = CrazyPayRepository(context)
+                    repository.handleInwardSms(
+                        utr = notification.utr,
+                        amount = notification.amount,
+                        senderHeader = notification.senderHeader,
+                        timestamp = notification.timestamp
+                    )
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+
+            // 2. Guaranteed background sync via WorkManager
+            enqueueUtrSyncWork(
+                context,
+                notification.utr,
+                notification.amount,
+                notification.senderHeader,
+                notification.timestamp
+            )
         }
     }
 

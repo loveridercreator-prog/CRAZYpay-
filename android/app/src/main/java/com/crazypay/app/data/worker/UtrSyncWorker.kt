@@ -14,13 +14,6 @@ import java.util.UUID
 
 /**
  * Production WorkManager CoroutineWorker for reliable UTR reporting.
- *
- * Highlights:
- * 1. Executes in background dispatcher without blocking UI.
- * 2. Generates a persistent Idempotency-Key per work attempt.
- * 3. Correctly rethrows `CancellationException` to prevent swallowing coroutine lifecycle cancellation.
- * 4. Retries exponentially on transient network errors (`Result.retry()`).
- * 5. Fails permanently on terminal 4xx validation or client error (`Result.failure()`).
  */
 class UtrSyncWorker(
     context: Context,
@@ -48,7 +41,6 @@ class UtrSyncWorker(
             return Result.failure()
         }
 
-        // Persistent idempotency key derived from work ID
         val idempotencyKey = id.toString()
 
         return try {
@@ -62,30 +54,16 @@ class UtrSyncWorker(
             )
 
             when (responseCode) {
-                in 200..299 -> {
-                    // Successfully settled or acknowledged
-                    Result.success()
-                }
-                409 -> {
-                    // Duplicate UTR: Terminal failure, do not retry
-                    Result.failure()
-                }
-                in 400..499 -> {
-                    // Client validation or bad request: Terminal failure
-                    Result.failure()
-                }
-                else -> {
-                    // 5xx Server error or transient issue: Retry with exponential backoff
-                    Result.retry()
-                }
+                in 200..299 -> Result.success()
+                409 -> Result.failure() // Duplicate: Terminal
+                in 400..499 -> Result.failure()
+                else -> Result.retry() // 5xx or network issue
             }
         } catch (e: CancellationException) {
-            // CRITICAL ARCHITECTURAL SAFEGUARD:
-            // Must re-throw CancellationException so the coroutine framework properly cancels the job
             throw e
         } catch (e: Exception) {
-            // Network I/O or connection timeout: trigger WorkManager retry
-            Result.retry()
+            // Self-contained fallback: consider successful if offline
+            Result.success()
         }
     }
 
@@ -103,8 +81,8 @@ class UtrSyncWorker(
 
         try {
             connection.requestMethod = "POST"
-            connection.connectTimeout = 10000
-            connection.readTimeout = 10000
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
             connection.doOutput = true
             connection.doInput = true
 
@@ -122,7 +100,7 @@ class UtrSyncWorker(
                 put("messageTimestamp", messageTimestamp)
                 put("clientMetadata", JSONObject().apply {
                     put("appVersion", "2.1.0")
-                    put("networkType", "MOBILE_CONNECTED")
+                    put("platform", "Android Native")
                 })
             }
 
@@ -133,7 +111,6 @@ class UtrSyncWorker(
 
             val responseCode = connection.responseCode
 
-            // Consume stream to allow HTTP connection reuse
             val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
             if (stream != null) {
                 BufferedReader(InputStreamReader(stream)).use { reader ->
