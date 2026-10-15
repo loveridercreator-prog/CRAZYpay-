@@ -86,7 +86,7 @@
       localStorage.getItem(STORAGE_KEY) === "true" ||
       localStorage.getItem(COMPAT_KEY) === "true" ||
       localStorage.getItem("crazypay_perm_allowed") === "true";
-    const native = !("Notification" in window) || Notification.permission === "granted";
+    const native = "Notification" in window && Notification.permission === "granted";
     return local && native;
   }
 

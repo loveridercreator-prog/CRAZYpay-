@@ -28969,601 +28969,87 @@
       document.addEventListener("touchstart", requestPortraitLock, { once: true, passive: true });
     </script>
 
-    <!-- =========================================================================
-         CRAZYPAY P2P ENGINE — STARTUP PERMISSION GATEKEEPER & T&C SYSTEM
-         Complete Single Self-Contained Drop-in Component (CSS + HTML + JS)
-         ========================================================================= -->
-    <style id="crazypay-gatekeeper-styles">
-      #crazypay-lock-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 9999999;
-        background: rgba(15, 23, 42, 0.94);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        box-sizing: border-box;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      }
-
-      .cp-gatekeeper-card {
-        background: #0f172a;
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        border-radius: 20px;
-        width: 100%;
-        max-width: 390px;
-        padding: 24px 20px;
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(16, 185, 129, 0.18);
-        color: #f8fafc;
-        text-align: center;
-        position: relative;
-        animation: cpCardIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-
-      @keyframes cpCardIn {
-        from { opacity: 0; transform: scale(0.95) translateY(10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-      }
-
-      .cp-icon-wrapper {
-        width: 56px;
-        height: 56px;
-        margin: 0 auto 16px;
-        border-radius: 16px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(15, 23, 42, 0) 70%);
-        border: 1px solid rgba(16, 185, 129, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #10b981;
-      }
-
-      .cp-gate-title {
-        color: #f8fafc;
-        font-size: 17px;
-        font-weight: 700;
-        line-height: 1.35;
-        margin: 0 0 8px;
-        letter-spacing: -0.01em;
-      }
-
-      .cp-gate-subtitle {
-        color: #94a3b8;
-        font-size: 13px;
-        line-height: 1.45;
-        margin: 0 0 16px;
-      }
-
-      .cp-benefit-list {
-        background: #1e293b;
-        border: 1px solid rgba(51, 65, 85, 0.7);
-        border-radius: 12px;
-        padding: 10px 14px;
-        margin-bottom: 16px;
-        text-align: left;
-      }
-
-      .cp-benefit-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #cbd5e1;
-        margin: 5px 0;
-      }
-
-      .cp-benefit-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #10b981;
-        flex-shrink: 0;
-      }
-
-      .cp-tc-box {
-        background: rgba(30, 41, 59, 0.85);
-        border: 1px solid rgba(51, 65, 85, 0.9);
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 16px;
-        text-align: left;
-      }
-
-      .cp-tc-label {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        cursor: pointer;
-        user-select: none;
-        font-size: 12px;
-        color: #cbd5e1;
-        line-height: 1.4;
-      }
-
-      .cp-tc-label input[type="checkbox"] {
-        margin-top: 2px;
-        accent-color: #10b981;
-        width: 17px;
-        height: 17px;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-
-      .cp-tc-link {
-        color: #10b981;
-        text-decoration: underline;
-        font-weight: 600;
-        cursor: pointer;
-        margin-left: 4px;
-        transition: color 0.15s;
-      }
-
-      .cp-tc-link:hover {
-        color: #34d399;
-      }
-
-      .cp-primary-btn {
-        width: 100%;
-        background: #334155;
-        color: #64748b;
-        border: none;
-        padding: 13px 16px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 14px;
-        letter-spacing: 0.02em;
-        cursor: not-allowed;
-        margin-bottom: 10px;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .cp-primary-btn.cp-active {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: #042f2e;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
-      }
-
-      .cp-primary-btn.cp-active:hover {
-        filter: brightness(1.08);
-        transform: translateY(-1px);
-      }
-
-      .cp-primary-btn.cp-active:active {
-        transform: translateY(0);
-      }
-
-      .cp-secondary-btn {
-        width: 100%;
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid rgba(71, 85, 105, 0.4);
-        padding: 10px 16px;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .cp-secondary-btn:hover {
-        background: rgba(51, 65, 85, 0.3);
-        color: #cbd5e1;
-      }
-
-      .cp-notice-banner {
-        display: none;
-        margin-top: 12px;
-        padding: 10px;
-        border-radius: 8px;
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.35);
-        color: #fca5a5;
-        font-size: 12px;
-        line-height: 1.4;
-        text-align: left;
-      }
-
-      /* T&C Scrollable Modal */
-      #cp-tc-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 10000000;
-        background: rgba(10, 15, 29, 0.92);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        box-sizing: border-box;
-      }
-
-      .cp-tc-modal-content {
-        background: #0f172a;
-        border: 1px solid #334155;
-        border-radius: 18px;
-        width: 100%;
-        max-width: 440px;
-        max-height: 85vh;
-        display: flex;
-        flex-direction: column;
-        color: #e2e8f0;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
-      }
-
-      .cp-tc-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #1e293b;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .cp-tc-header h4 {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 700;
-        color: #10b981;
-      }
-
-      .cp-tc-close-x {
-        background: none;
-        border: none;
-        color: #94a3b8;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 4px;
-        line-height: 1;
-      }
-
-      .cp-tc-close-x:hover {
-        color: #f8fafc;
-      }
-
-      .cp-tc-body {
-        padding: 18px 20px;
-        overflow-y: auto;
-        font-size: 13px;
-        line-height: 1.6;
-        color: #cbd5e1;
-        flex: 1;
-      }
-
-      .cp-tc-body h5 {
-        color: #f8fafc;
-        margin: 14px 0 6px;
-        font-size: 13px;
-        font-weight: 600;
-      }
-
-      .cp-tc-body h5:first-child {
-        margin-top: 0;
-      }
-
-      .cp-tc-footer {
-        padding: 14px 20px;
-        border-top: 1px solid #1e293b;
-        background: #091120;
-      }
-    </style>
-
-    <div id="crazypay-lock-overlay">
-      <div class="cp-gatekeeper-card" role="dialog" aria-modal="true" aria-labelledby="cp-gate-heading">
-        <!-- Security Bell Icon -->
-        <div class="cp-icon-wrapper">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            <circle cx="18" cy="4" r="2.5" fill="#10b981" stroke="#0f172a" stroke-width="1.5"></circle>
-          </svg>
+    <!-- CrazyPay Direct-Working Permission & T&C Gatekeeper -->
+    <div id="crazypay-lock-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.95);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:sans-serif;padding:16px;">
+      <div style="background:#0f172a;border:1px solid #10b981;border-radius:16px;width:100%;max-width:360px;padding:24px;box-shadow:0 10px 25px rgba(16,185,129,0.3);color:#fff;text-align:center;">
+        
+        <!-- Logo & Title -->
+        <div style="margin-bottom:16px;">
+          <h3 style="color:#10b981;margin:0 0 8px 0;font-size:18px;">CrazyPay Security Gate</h3>
+          <p style="font-size:12px;color:#94a3b8;margin:0;">Real-time ledger sync and notification permissions required.</p>
         </div>
 
-        <h3 id="cp-gate-heading" class="cp-gate-title">CrazyPay P2P Security & Ledger Protection</h3>
-        <p class="cp-gate-subtitle">Required to sync payment ledgers and verify transaction references instantly in the background.</p>
-
-        <!-- Feature Points -->
-        <div class="cp-benefit-list">
-          <div class="cp-benefit-item">
-            <span class="cp-benefit-dot"></span>
-            <span>Real-time instant bank & UPI UTR matching</span>
-          </div>
-          <div class="cp-benefit-item">
-            <span class="cp-benefit-dot"></span>
-            <span>Automated escrow release without trade delays</span>
-          </div>
-          <div class="cp-benefit-item">
-            <span class="cp-benefit-dot"></span>
-            <span>Continuous background synchronization protection</span>
-          </div>
-        </div>
-
-        <!-- T&C Agreement Box -->
-        <div class="cp-tc-box">
-          <label class="cp-tc-label" for="cp-tc-checkbox">
-            <input type="checkbox" id="cp-tc-checkbox">
-            <span>
-              I agree to the Terms & Conditions regarding ledger sync and liability.
-              <a href="javascript:void(0)" id="cp-open-tc-link" class="cp-tc-link">Open T&C</a>
-            </span>
+        <!-- T&C Box -->
+        <div style="background:#1e293b;padding:12px;border-radius:8px;margin-bottom:16px;text-align:left;font-size:12px;color:#cbd5e1;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="cp-tc-checkbox" style="accent-color:#10b981;width:16px;height:16px;">
+            <span>I agree to the Terms & Conditions regarding ledger sync and liability.</span>
           </label>
         </div>
 
-        <!-- Status / Blocked Notice -->
-        <div id="cp-status-notice" class="cp-notice-banner"></div>
-
-        <!-- Action Buttons -->
-        <button id="cp-allow-btn" class="cp-primary-btn" disabled>
-          <span id="cp-btn-spinner" style="display:none;width:14px;height:14px;border:2px solid #042f2e;border-top-color:transparent;border-radius:50%;animation:cpSpin 0.7s linear infinite;"></span>
-          <span id="cp-btn-text">ALLOW & ACTIVATE ENGINE</span>
+        <!-- Buttons -->
+        <button id="cp-allow-btn" disabled style="width:100%;background:#334155;color:#94a3b8;border:none;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;cursor:not-allowed;margin-bottom:8px;transition:0.3s;">
+          ALLOW & CONTINUE
         </button>
-
-        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
-          <a href="javascript:void(0)" id="cp-cancel-btn" style="color:#64748b;font-size:11px;text-decoration:none;transition:color 0.2s;opacity:0.75;" onmouseover="this.style.opacity='1';this.style.color='#94a3b8'" onmouseout="this.style.opacity='0.75';this.style.color='#64748b'">Remind Me Later</a>
-        </div>
       </div>
     </div>
-
-    <!-- Scrollable Terms & Conditions Modal -->
-    <div id="cp-tc-modal">
-      <div class="cp-tc-modal-content">
-        <div class="cp-tc-header">
-          <h4>Terms & Conditions — CrazyPay P2P</h4>
-          <button id="cp-close-tc-x" class="cp-tc-close-x" aria-label="Close Terms">&times;</button>
-        </div>
-        <div class="cp-tc-body">
-          <h5>1. Purpose of Background Alerts & Ledger Sync</h5>
-          <p>
-            CrazyPay requires continuous real-time transaction notification authorization to monitor incoming UPI and IMPS bank references. This automated service matches 12-digit UTR identifiers instantly with pending P2P orders to release crypto/INR escrow without manual intervention.
-          </p>
-
-          <h5>2. Platform Liability Disclaimer</h5>
-          <p>
-            CrazyPay app/platform bears no legal or financial liability in case of funds delayed, stuck, or failed due to third-party banking downtime, NPCI network delays, or incorrect UTR/account numbers submitted by users. Users are solely responsible for verifying transaction credentials.
-          </p>
-
-          <h5>3. Delayed or Stuck Transactions Support Guide</h5>
-          <p>
-            If any transaction is delayed or an order remains unreleased due to bank server congestion, do NOT raise duplicate disputes. Users must submit their valid payment screenshot and bank UTR statement directly to the official CrazyPay Telegram Support handle for expedited manual verification.
-          </p>
-
-          <h5>4. Authorization & Compliance</h5>
-          <p>
-            By ticking the agreement and allowing alerts, you consent to CrazyPay storing your device synchronization status locally for secure transaction processing.
-          </p>
-        </div>
-        <div class="cp-tc-footer">
-          <button id="cp-close-tc-btn" class="cp-primary-btn cp-active" style="margin-bottom:0;">
-            I Understand & Agree
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <style>
-      @keyframes cpSpin { to { transform: rotate(360deg); } }
-    </style>
 
     <script>
-    (function () {
-      // Direct & Resilient Native Permission Gatekeeper
-      const STORAGE_KEY = 'crazypay_perm_allowed';
-      const NOTIF_KEY = 'crazypay_notification_granted';
-      const AUTH_KEY = 'crazypay_persistent_auth';
-
-      function initCrazyPayGatekeeper() {
+    document.addEventListener("DOMContentLoaded", function () {
         const overlay = document.getElementById('crazypay-lock-overlay');
         const checkbox = document.getElementById('cp-tc-checkbox');
         const allowBtn = document.getElementById('cp-allow-btn');
-        const btnText = document.getElementById('cp-btn-text');
-        const btnSpinner = document.getElementById('cp-btn-spinner');
-        const cancelBtn = document.getElementById('cp-cancel-btn');
-        const noticeBox = document.getElementById('cp-status-notice');
-        const openTcLink = document.getElementById('cp-open-tc-link');
-        const tcModal = document.getElementById('cp-tc-modal');
-        const closeTcX = document.getElementById('cp-close-tc-x');
-        const closeTcBtn = document.getElementById('cp-close-tc-btn');
 
         if (!overlay || !checkbox || !allowBtn) return;
 
-        // Helper: Check if already granted
-        function checkAlreadyGranted() {
-          const hasLocal = localStorage.getItem(STORAGE_KEY) === 'true' || localStorage.getItem(NOTIF_KEY) === 'true';
-          const hasNative = typeof window.Notification !== 'undefined' && window.Notification.permission === 'granted';
-          // If native notification is unsupported, trust local approval
-          if (typeof window.Notification === 'undefined') {
-            return hasLocal;
-          }
-          return hasLocal && hasNative;
-        }
-
-        // On Startup: Evaluate permission state
-        if (checkAlreadyGranted()) {
-          overlay.style.display = 'none';
+        // Check if permission is already allowed
+        if ((localStorage.getItem('crazypay_perm_allowed') === 'true' || localStorage.getItem('crazypay_notification_granted') === 'true') && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            overlay.style.display = 'none';
         } else {
-          overlay.style.display = 'flex';
+            overlay.style.display = 'flex';
         }
 
-        // Show notice banner helper
-        function showNotice(msg, isError = true) {
-          if (!noticeBox) return;
-          noticeBox.style.display = 'block';
-          noticeBox.style.background = isError ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)';
-          noticeBox.style.borderColor = isError ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)';
-          noticeBox.style.color = isError ? '#fca5a5' : '#6ee7b7';
-          noticeBox.textContent = msg;
-        }
-
-        function hideNotice() {
-          if (noticeBox) noticeBox.style.display = 'none';
-        }
-
-        // Checkbox toggle logic
-        function updateBtnState() {
-          if (checkbox.checked) {
-            allowBtn.disabled = false;
-            allowBtn.classList.add('cp-active');
-          } else {
-            allowBtn.disabled = true;
-            allowBtn.classList.remove('cp-active');
-          }
-        }
-
+        // Checkbox enable/disable logic
         checkbox.addEventListener('change', function () {
-          hideNotice();
-          updateBtnState();
+            if (this.checked) {
+                allowBtn.disabled = false;
+                allowBtn.style.background = '#10b981';
+                allowBtn.style.color = '#000';
+                allowBtn.style.cursor = 'pointer';
+            } else {
+                allowBtn.disabled = true;
+                allowBtn.style.background = '#334155';
+                allowBtn.style.color = '#94a3b8';
+                allowBtn.style.cursor = 'not-allowed';
+            }
         });
 
-        // Open & Close T&C Modal
-        if (openTcLink) {
-          openTcLink.addEventListener('click', function (e) {
-            e.preventDefault();
-            tcModal.style.display = 'flex';
-          });
-        }
+        // Allow button click native permission trigger
+        allowBtn.addEventListener('click', async function () {
+            if (!checkbox.checked) return;
 
-        function closeTermsModal(accept = false) {
-          if (tcModal) tcModal.style.display = 'none';
-          if (accept && checkbox && !checkbox.checked) {
-            checkbox.checked = true;
-            updateBtnState();
-          }
-        }
-
-        if (closeTcX) closeTcX.addEventListener('click', () => closeTermsModal(false));
-        if (closeTcBtn) closeTcBtn.addEventListener('click', () => closeTermsModal(true));
-        if (tcModal) {
-          tcModal.addEventListener('click', function (e) {
-            if (e.target === tcModal) closeTermsModal(false);
-          });
-        }
-
-        // Universal Promise + Callback request permission wrapper
-        function requestUniversalPermission() {
-          return new Promise(function (resolve) {
-            if (!('Notification' in window)) {
-              resolve('unsupported');
-              return;
-            }
-
-            let completed = false;
-            function done(val) {
-              if (!completed) {
-                completed = true;
-                resolve(val);
-              }
+            // Check if browser has already permanently blocked permissions
+            if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+                alert("आपने पहले परमिशन ब्लॉक कर रखी है! कृपया क्रोम की साइट सेटिंग्स में जाकर इसे Allow करें।");
+                return;
             }
 
             try {
-              // Legacy Safari/WebKit accepts a callback; modern Chrome/Firefox returns a Promise
-              const res = window.Notification.requestPermission(function (permission) {
-                done(permission);
-              });
-
-              if (res && typeof res.then === 'function') {
-                res.then(function (perm) {
-                  done(perm);
-                }).catch(function (err) {
-                  console.warn('[CrazyPay] Notification error:', err);
-                  done(window.Notification.permission || 'denied');
-                });
-              }
-            } catch (err) {
-              console.warn('[CrazyPay] Native invoke failed:', err);
-              done(window.Notification.permission || 'denied');
+                let result = typeof Notification !== 'undefined' ? await Notification.requestPermission() : 'granted';
+                if (result === 'granted') {
+                    localStorage.setItem('crazypay_perm_allowed', 'true');
+                    localStorage.setItem('crazypay_notification_granted', 'true');
+                    localStorage.setItem('crazypay_persistent_auth', 'true');
+                    overlay.style.display = 'none';
+                } else {
+                    alert("परमिशन देना अनिवार्य है! कृपया Allow पर क्लिक करें।");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("कृपया ब्राउज़र सेटिंग्स से नोटिफिकेशन परमिशन Allow करें।");
             }
-          });
-        }
-
-        // Direct Allow Button Click Handler (Instant & User-Gesture Compliant)
-        allowBtn.addEventListener('click', async function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          if (!checkbox.checked) {
-            showNotice('कृपया पहले Terms & Conditions चेकबॉक्स को सेलेक्ट करें। (Please accept Terms & Conditions first)');
-            return;
-          }
-
-          // Case 1: Browser does not support Notification API
-          if (!('Notification' in window)) {
-            localStorage.setItem(STORAGE_KEY, 'true');
-            localStorage.setItem(NOTIF_KEY, 'true');
-            localStorage.setItem(AUTH_KEY, 'true');
-            overlay.style.display = 'none';
-            return;
-          }
-
-          // Case 2: Browser has already permanently denied/blocked notifications
-          if (window.Notification.permission === 'denied') {
-            showNotice('आपने ब्राउज़र में परमिशन ब्लॉक कर रखी है! क्रोम/ब्राउज़र की Site Settings (ताला आइकॉन 🔒) में जाकर Notification को "Allow" करें।', true);
-            alert('आपने पहले परमिशन ब्लॉक कर रखी है!\n\nकृपया ब्राउज़र की साइट सेटिंग्स (ऊपर एड्रेस बार में 🔒 लॉक या सेटिंग्स आइकॉन) में जाकर Notifications को "Allow" करें, फिर पेज रिफ्रेश करें।');
-            return;
-          }
-
-          // Case 3: Already granted
-          if (window.Notification.permission === 'granted') {
-            localStorage.setItem(STORAGE_KEY, 'true');
-            localStorage.setItem(NOTIF_KEY, 'true');
-            localStorage.setItem(AUTH_KEY, 'true');
-            overlay.style.display = 'none';
-            return;
-          }
-
-          // Case 4: Default / Pending — Trigger immediate user-gesture permission prompt
-          try {
-            if (btnSpinner) btnSpinner.style.display = 'inline-block';
-            if (btnText) btnText.textContent = 'REQUESTING PERMISSION...';
-            allowBtn.disabled = true;
-
-            const result = await requestUniversalPermission();
-
-            if (result === 'granted') {
-              localStorage.setItem(STORAGE_KEY, 'true');
-              localStorage.setItem(NOTIF_KEY, 'true');
-              localStorage.setItem(AUTH_KEY, 'true');
-              if (window.CrazyPayBridge && typeof window.CrazyPayBridge.syncLedgerStatus === 'function') {
-                try { window.CrazyPayBridge.syncLedgerStatus('activated'); } catch (_e) {}
-              }
-              overlay.style.display = 'none';
-            } else if (result === 'denied') {
-              showNotice('परमिशन अस्वीकार (Denied) कर दी गई है। P2P फीचर्स का उपयोग करने के लिए साइट सेटिंग्स से Allow करें।', true);
-            } else {
-              showNotice('परमिशन देना आवश्यक है! कृपया ब्राउज़र डायलॉग में "Allow" चुनें।', true);
-            }
-          } catch (err) {
-            console.error('[CrazyPay Gatekeeper Error]', err);
-            showNotice('कृपया साइट सेटिंग्स से नोटिफिकेशन परमिशन Allow करें।', true);
-          } finally {
-            if (btnSpinner) btnSpinner.style.display = 'none';
-            if (btnText) btnText.textContent = 'ALLOW & ACTIVATE ENGINE';
-            updateBtnState();
-          }
         });
-
-        // Cancel / Remind Later Handler
-        if (cancelBtn) {
-          cancelBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            overlay.style.display = 'none';
-          });
-        }
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCrazyPayGatekeeper);
-      } else {
-        initCrazyPayGatekeeper();
-      }
-    })();
+    });
     </script>
   </body>
 </html>
