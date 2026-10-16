@@ -3,163 +3,136 @@ package com.crazypay.app.ui.trade
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.crazypay.app.R
-import com.crazypay.app.data.local.entities.TradeEntity
-import com.crazypay.app.data.repository.CrazyPayRepository
-import kotlinx.coroutines.launch
-import java.text.DecimalFormat
+import com.crazypay.app.CrazyPayApplication
+import com.crazypay.app.data.model.OrderStatus
+import com.crazypay.app.data.model.P2pOrder
+import com.crazypay.app.databinding.ActivityOrderDetailBinding
 
 class OrderDetailActivity : AppCompatActivity() {
 
-    private lateinit var repository: CrazyPayRepository
-    private var currentOrderId: String? = null
-    private var currentTrade: TradeEntity? = null
-    private var timer: CountDownTimer? = null
-
-    private lateinit var btnBack: Button
-    private lateinit var tvOrderIdHeader: TextView
-    private lateinit var tvCountdown: TextView
-    private lateinit var tvOrderFiatAmount: TextView
-    private lateinit var tvOrderCryptoAmount: TextView
-    private lateinit var tvSellerName: TextView
-    private lateinit var tvSellerUpi: TextView
-    private lateinit var btnCopyUpi: Button
-    private lateinit var etManualUtr: EditText
-    private lateinit var btnSubmitUtr: Button
-    private lateinit var btnSimulateSms: Button
-
-    private val inrFormat = DecimalFormat("#,##0.00")
-    private val cryptoFormat = DecimalFormat("0.0000")
+    private lateinit var binding: ActivityOrderDetailBinding
+    private val repository by lazy { (application as CrazyPayApplication).repository }
+    private var orderId: String = ""
+    private var countDownTimer: CountDownTimer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_order_detail)
+        binding = ActivityOrderDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        repository = CrazyPayRepository(this)
-        currentOrderId = intent.getStringExtra("EXTRA_ORDER_ID")
+        orderId = intent.getStringExtra("EXTRA_ORDER_ID") ?: ""
+        if (orderId.isEmpty()) {
+            finish()
+            return
+        }
 
-        btnBack = findViewById(R.id.btnBack)
-        tvOrderIdHeader = findViewById(R.id.tvOrderIdHeader)
-        tvCountdown = findViewById(R.id.tvCountdown)
-        tvOrderFiatAmount = findViewById(R.id.tvOrderFiatAmount)
-        tvOrderCryptoAmount = findViewById(R.id.tvOrderCryptoAmount)
-        tvSellerName = findViewById(R.id.tvSellerName)
-        tvSellerUpi = findViewById(R.id.tvSellerUpi)
-        btnCopyUpi = findViewById(R.id.btnCopyUpi)
-        etManualUtr = findViewById(R.id.etManualUtr)
-        btnSubmitUtr = findViewById(R.id.btnSubmitUtr)
-        btnSimulateSms = findViewById(R.id.btnSimulateSms)
-
-        btnBack.setOnClickListener { finish() }
-
-        loadTradeDetails()
-        setupActions()
+        setupViews()
+        setupListeners()
     }
 
-    private fun loadTradeDetails() {
-        val orderId = currentOrderId ?: return
-        lifecycleScope.launch {
-            currentTrade = repository.getTradeByOrderId(orderId)
-            currentTrade?.let { trade ->
-                tvOrderIdHeader.text = "Order ID: ${trade.orderId}"
-                tvOrderFiatAmount.text = "₹" + inrFormat.format(trade.fiatAmount)
-                tvOrderCryptoAmount.text = "Receiving: ${cryptoFormat.format(trade.assetAmount)} ${trade.asset} (@ ₹${trade.exchangeRate}/USDT)"
-                tvSellerName.text = "Counterparty: ${trade.sellerName}"
-                tvSellerUpi.text = trade.boundPaymentIdentifier
+    private fun setupViews() {
+        val order = repository.orders.value.find { it.id == orderId }
+        if (order == null) {
+            Toast.makeText(this, "Order not found", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
-                if (trade.status == "COMPLETED") {
-                    btnSubmitUtr.text = "Order Completed & Settled"
-                    btnSubmitUtr.isEnabled = false
-                    tvCountdown.text = "SETTLED"
-                    tvCountdown.setBackgroundResource(R.drawable.bg_badge_active)
-                    tvCountdown.setTextColor(resources.getColor(R.color.success_green, null))
-                } else {
-                    startCountdownTimer(trade.expiresAt)
-                }
-            }
+        bindOrderData(order)
+        startCountdown(order)
+    }
+
+    private fun bindOrderData(order: P2pOrder) {
+        binding.tvDetailStatus.text = order.status.name
+        binding.tvDetailAmountInr.text = String.format("₹ %,.2f", order.amountInr)
+        binding.tvDetailAmountUsdt.text = String.format("You will receive: %.2f USDT", order.amountUsdt)
+        binding.tvSellerUpi.text = order.sellerUpiId
+
+        if (order.status == OrderStatus.RELEASED) {
+            binding.tvDetailStatus.setTextColor(getColor(com.crazypay.app.R.color.success_green))
+            binding.tvCountdownTimer.text = "ESCROW RELEASED"
+            binding.tvCountdownTimer.setTextColor(getColor(com.crazypay.app.R.color.success_green))
+            binding.etUtrInput.setText(order.utrNumber)
+            binding.etUtrInput.isEnabled = false
+            binding.btnVerifyUtr.isEnabled = false
+            binding.btnVerifyUtr.text = "TRANSACTION COMPLETED"
         }
     }
 
-    private fun startCountdownTimer(expiresAt: Long) {
-        val millisLeft = (expiresAt - System.currentTimeMillis()).coerceAtLeast(0L)
-        timer?.cancel()
-        timer = object : CountDownTimer(millisLeft, 1000) {
+    private fun startCountdown(order: P2pOrder) {
+        if (order.status == OrderStatus.RELEASED) return
+
+        val remainingMillis = (order.expiresAt - System.currentTimeMillis()).coerceAtLeast(0L)
+        countDownTimer?.cancel()
+        countDownTimer = object : CountDownTimer(remainingMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = (millisUntilFinished / 1000) / 60
                 val seconds = (millisUntilFinished / 1000) % 60
-                tvCountdown.text = String.format("%02d:%02d", minutes, seconds)
+                binding.tvCountdownTimer.text = String.format("%02d:%02d", minutes, seconds)
             }
 
             override fun onFinish() {
-                tvCountdown.text = "EXPIRED"
+                binding.tvCountdownTimer.text = "00:00"
             }
         }.start()
     }
 
-    private fun setupActions() {
-        btnCopyUpi.setOnClickListener {
-            val upi = tvSellerUpi.text.toString()
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("UPI ID", upi))
-            Toast.makeText(this, "UPI Copied to Clipboard!", Toast.LENGTH_SHORT).show()
+    private fun setupListeners() {
+        binding.btnBackOrder.setOnClickListener {
+            finish()
         }
 
-        btnSubmitUtr.setOnClickListener {
-            val utr = etManualUtr.text.toString().trim()
+        binding.btnCopyUpi.setOnClickListener {
+            val upi = binding.tvSellerUpi.text.toString()
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Seller UPI", upi))
+            Toast.makeText(this, "UPI copied to clipboard: $upi", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnVerifyUtr.setOnClickListener {
+            val utr = binding.etUtrInput.text.toString().trim()
+            binding.tvUtrError.visibility = View.GONE
+
             if (utr.length != 12 || !utr.all { it.isDigit() }) {
-                Toast.makeText(this, "Please enter a valid 12-digit numeric UTR/RRN", Toast.LENGTH_SHORT).show()
+                binding.tvUtrError.text = "Please enter a valid 12-digit numeric UTR reference number."
+                binding.tvUtrError.visibility = View.VISIBLE
                 return@setOnClickListener
             }
 
-            val orderId = currentOrderId ?: return@setOnClickListener
-            lifecycleScope.launch {
-                val success = repository.submitUtr(orderId, utr)
-                if (success) {
-                    showSuccessDialog(utr)
-                }
+            binding.btnVerifyUtr.isEnabled = false
+            binding.btnVerifyUtr.text = "Verifying with NPCI Gateway..."
+
+            val result = repository.verifyUtr(orderId, utr)
+            result.onSuccess { updated ->
+                Toast.makeText(this, "✓ UTR Verified! Escrow released successfully.", Toast.LENGTH_LONG).show()
+                bindOrderData(updated)
+            }.onFailure { err ->
+                binding.btnVerifyUtr.isEnabled = true
+                binding.btnVerifyUtr.text = "VERIFY UTR & RELEASE ESCROW"
+                binding.tvUtrError.text = err.message ?: "Verification failed."
+                binding.tvUtrError.visibility = View.VISIBLE
             }
         }
 
-        // Simulates receiving an inward bank SMS for this exact order
-        btnSimulateSms.setOnClickListener {
-            val trade = currentTrade ?: return@setOnClickListener
-            val demoUtr = (100000000000L..999999999999L).random().toString()
-            lifecycleScope.launch {
-                val matched = repository.handleInwardSms(
-                    utr = demoUtr,
-                    amount = trade.fiatAmount,
-                    senderHeader = "AX-HDFCBK-T",
-                    timestamp = System.currentTimeMillis()
-                )
-                if (matched != null) {
-                    showSuccessDialog(demoUtr)
-                }
+        binding.tvOrderSupportLink.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(repository.systemConfig.value.telegramSupportUrl))
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Support: @crazypay_official_support", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun showSuccessDialog(utr: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Payment Verified & Completed!")
-            .setMessage("UTR $utr was successfully verified by CrazyPay Engine. USDT has been released to your wallet.")
-            .setPositiveButton("OK") { _, _ ->
-                loadTradeDetails()
-            }
-            .setCancelable(false)
-            .show()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        timer?.cancel()
+        countDownTimer?.cancel()
     }
 }

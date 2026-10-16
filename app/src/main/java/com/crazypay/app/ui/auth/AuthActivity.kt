@@ -2,140 +2,104 @@ package com.crazypay.app.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.crazypay.app.R
-import com.crazypay.app.data.local.CrazyPayDatabase
-import com.crazypay.app.data.local.entities.UserEntity
+import com.crazypay.app.CrazyPayApplication
+import com.crazypay.app.databinding.ActivityAuthBinding
 import com.crazypay.app.ui.MainActivity
-import kotlinx.coroutines.launch
+import com.google.android.material.tabs.TabLayout
 
 class AuthActivity : AppCompatActivity() {
 
-    private lateinit var tabLogin: Button
-    private lateinit var tabRegister: Button
-    private lateinit var etPhone: EditText
-    private lateinit var etPassword: EditText
-    private lateinit var etCaptcha: EditText
-    private lateinit var tvCaptchaCode: TextView
-    private lateinit var etOtp: EditText
-    private lateinit var btnSendOtp: Button
-    private lateinit var btnAuthSubmit: Button
-    private lateinit var btnQuickDemo: Button
+    private lateinit var binding: ActivityAuthBinding
+    private val repository by lazy { (application as CrazyPayApplication).repository }
+    private val prefs by lazy { (application as CrazyPayApplication).prefsManager }
 
-    private var isLoginMode = true
-    private var generatedCaptcha = "7492"
+    private var isRegisterMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_auth)
 
-        tabLogin = findViewById(R.id.tabLogin)
-        tabRegister = findViewById(R.id.tabRegister)
-        etPhone = findViewById(R.id.etPhone)
-        etPassword = findViewById(R.id.etPassword)
-        etCaptcha = findViewById(R.id.etCaptcha)
-        tvCaptchaCode = findViewById(R.id.tvCaptchaCode)
-        etOtp = findViewById(R.id.etOtp)
-        btnSendOtp = findViewById(R.id.btnSendOtp)
-        btnAuthSubmit = findViewById(R.id.btnAuthSubmit)
-        btnQuickDemo = findViewById(R.id.btnQuickDemo)
+        // Auto-navigate to dashboard if user has active session
+        if (repository.currentUser.value != null && repository.currentUser.value!!.isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
 
-        refreshCaptcha()
-        setupTabSwitching()
-        setupAuthActions()
+        binding = ActivityAuthBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        setupTabs()
+        setupListeners()
+        prefillRememberedPhone()
     }
 
-    private fun refreshCaptcha() {
-        generatedCaptcha = (1000..9999).random().toString()
-        tvCaptchaCode.text = generatedCaptcha
-    }
-
-    private fun setupTabSwitching() {
-        tabLogin.setOnClickListener {
-            isLoginMode = true
-            tabLogin.setBackgroundResource(R.drawable.bg_button_primary)
-            tabLogin.setTextColor(resources.getColor(R.color.text_white, null))
-            tabRegister.setBackgroundColor(resources.getColor(R.color.transparent, null))
-            tabRegister.setTextColor(resources.getColor(R.color.text_muted, null))
-            btnAuthSubmit.text = "Log In"
-        }
-
-        tabRegister.setOnClickListener {
-            isLoginMode = false
-            tabRegister.setBackgroundResource(R.drawable.bg_button_primary)
-            tabRegister.setTextColor(resources.getColor(R.color.text_white, null))
-            tabLogin.setBackgroundColor(resources.getColor(R.color.transparent, null))
-            tabLogin.setTextColor(resources.getColor(R.color.text_muted, null))
-            btnAuthSubmit.text = "Create Account"
-        }
-
-        tvCaptchaCode.setOnClickListener {
-            refreshCaptcha()
-        }
-
-        btnSendOtp.setOnClickListener {
-            val phone = etPhone.text.toString().trim()
-            if (phone.length < 10) {
-                Toast.makeText(this, "Please enter valid 10-digit mobile number", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            etOtp.setText("882194")
-            Toast.makeText(this, "OTP 882194 sent to $phone", Toast.LENGTH_LONG).show()
+    private fun prefillRememberedPhone() {
+        val remembered = prefs.getRememberedPhone()
+        if (remembered.isNotEmpty()) {
+            binding.etPhone.setText(remembered)
         }
     }
 
-    private fun setupAuthActions() {
-        btnAuthSubmit.setOnClickListener {
-            val phone = etPhone.text.toString().trim()
-            val password = etPassword.text.toString().trim()
-            val captcha = etCaptcha.text.toString().trim()
-
-            if (phone.isEmpty()) {
-                Toast.makeText(this, "Please enter mobile number", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (password.length < 4) {
-                Toast.makeText(this, "Password must be at least 4 characters", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (captcha != generatedCaptcha && captcha.isNotEmpty()) {
-                Toast.makeText(this, "Invalid Captcha. Please enter $generatedCaptcha", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+    private fun setupTabs() {
+        binding.tabLayoutAuth.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                isRegisterMode = tab?.position == 1
+                updateUiForMode()
             }
 
-            lifecycleScope.launch {
-                val db = CrazyPayDatabase.getDatabase(this@AuthActivity)
-                val existingUser = db.userDao().getCurrentUser()
-                if (existingUser == null) {
-                    val newUser = UserEntity(
-                        mobile = phone,
-                        displayName = "User " + phone.takeLast(4),
-                        role = "USER",
-                        kycLevel = "TIER_1",
-                        balanceInr = 10000.00,
-                        balanceUsdt = 100.00
-                    )
-                    db.userDao().insertUser(newUser)
-                }
-                openMainDashboard()
-            }
-        }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+    }
 
-        btnQuickDemo.setOnClickListener {
-            openMainDashboard()
+    private fun updateUiForMode() {
+        binding.tvAuthError.visibility = View.GONE
+        if (isRegisterMode) {
+            binding.layoutInviteCode.visibility = View.VISIBLE
+            binding.btnSubmitAuth.text = "Create Account"
+        } else {
+            binding.layoutInviteCode.visibility = View.GONE
+            binding.btnSubmitAuth.text = "Log In to Account"
         }
     }
 
-    private fun openMainDashboard() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+    private fun setupListeners() {
+        binding.btnSubmitAuth.setOnClickListener {
+            val phone = binding.etPhone.text.toString().trim()
+            val pass = binding.etPassword.text.toString().trim()
+            val inviteCode = binding.etInviteCode.text.toString().trim()
+
+            binding.tvAuthError.visibility = View.GONE
+
+            if (phone.isEmpty() || phone.length != 10) {
+                showError("Please enter a valid 10-digit Indian mobile number.")
+                return@setOnClickListener
+            }
+
+            if (pass.isEmpty() || pass.length < 4) {
+                showError("Password must be at least 4 characters.")
+                return@setOnClickListener
+            }
+
+            val result = if (isRegisterMode) {
+                repository.register(phone, pass, inviteCode)
+            } else {
+                repository.login(phone, pass)
+            }
+
+            result.onSuccess {
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }.onFailure { err ->
+                showError(err.message ?: "Authentication failed. Please verify credentials.")
+            }
         }
-        startActivity(intent)
-        finish()
+    }
+
+    private fun showError(msg: String) {
+        binding.tvAuthError.text = msg
+        binding.tvAuthError.visibility = View.VISIBLE
     }
 }

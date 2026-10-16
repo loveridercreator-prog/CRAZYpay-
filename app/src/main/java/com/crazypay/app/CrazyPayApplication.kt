@@ -4,44 +4,58 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
-import com.crazypay.app.data.local.CrazyPayDatabase
+import com.crazypay.app.data.local.PreferencesManager
+import com.crazypay.app.data.repository.CrazyPayRepository
 
 class CrazyPayApplication : Application() {
 
+    lateinit var prefsManager: PreferencesManager
+        private set
+
+    lateinit var repository: CrazyPayRepository
+        private set
+
     companion object {
-        const val CHANNEL_ID_TRANSACTIONS = "channel_crazypay_transactions"
-        const val CHANNEL_ID_SECURITY = "channel_crazypay_security"
+        lateinit var instance: CrazyPayApplication
+            private set
+
+        const val CHANNEL_TRANSACTIONS = "crazypay_transactions_channel"
+        const val CHANNEL_SECURITY = "crazypay_security_alerts_channel"
     }
 
     override fun onCreate() {
         super.onCreate()
-        // Initialize Room Database pre-population
-        CrazyPayDatabase.getDatabase(this)
+        instance = this
+
+        prefsManager = PreferencesManager(this)
+        repository = CrazyPayRepository(prefsManager)
+
         createNotificationChannels()
     }
 
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+
             val txChannel = NotificationChannel(
-                CHANNEL_ID_TRANSACTIONS,
-                "Payment & UTR Settlements",
+                CHANNEL_TRANSACTIONS,
+                "P2P Transaction Updates",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Real-time P2P trade matching and UTR confirmation alerts"
+                description = "Notifications regarding escrow release and UTR payment verification"
                 enableVibration(true)
             }
 
-            val secChannel = NotificationChannel(
-                CHANNEL_ID_SECURITY,
-                "Security & Account Alerts",
+            val securityChannel = NotificationChannel(
+                CHANNEL_SECURITY,
+                "Security & Ledger Protection",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Account login, OTP, and KYC tier updates"
+                description = "Ledger sync notices and cross-device security authorization"
             }
 
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(txChannel)
-            manager.createNotificationChannel(secChannel)
+            notificationManager.createNotificationChannel(txChannel)
+            notificationManager.createNotificationChannel(securityChannel)
         }
     }
 }
